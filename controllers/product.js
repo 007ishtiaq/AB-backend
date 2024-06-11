@@ -611,15 +611,24 @@ const handleStar = async (req, res, stars) => {
 };
 
 const handleSub = async (req, res, sub) => {
-  const products = await Product.find({ subs: sub })
-    .populate("category", "_id name")
-    .populate("attributes.subs")
-    .populate("attributes.subs2")
-    // .populate("subs2")
-    // .populate("postedBy", "_id name")
-    .exec();
+  console.log("sub", sub);
+  try {
+    // Use MongoDB's $elemMatch to match an element in the array
+    const products = await Product.find({
+      "attributes.subs2": { $elemMatch: { $eq: sub } },
+    })
+      .populate("category", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
+      .exec();
 
-  res.json(products);
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching products" });
+  }
 };
 
 const handleShipping = async (req, res, shipping) => {
