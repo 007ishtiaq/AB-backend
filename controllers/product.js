@@ -466,6 +466,76 @@ exports.ratedProducts = async (req, res) => {
 //   res.json(products);
 // };
 
+// const handleQuery = async (req, res, query) => {
+//   try {
+//     // Perform text search on title and description
+//     const textSearchResults = await Product.find({ $text: { $search: query } })
+//       .populate("category", "_id name")
+//       .populate("attributes.subs")
+//       .populate("attributes.subs2")
+//       .exec();
+//     // If text search results are not empty, return them
+//     if (textSearchResults.length !== 0) {
+//       return res.json(textSearchResults);
+//     }
+//     // Fetch all products
+//     const allProducts = await Product.find({})
+//       .populate("category", "_id name")
+//       .populate("attributes.subs")
+//       .populate("attributes.subs2")
+//       .exec();
+//     // Filter products by category name
+//     let categorySearchResults = allProducts.filter((product) =>
+//       product.category.name.toLowerCase().includes(query.toLowerCase())
+//     );
+//     // If category search results are empty, search by sub
+//     if (categorySearchResults.length === 0) {
+//       // let subSearchResults = allProducts.filter((product) =>
+//       //   product.subs.name.toLowerCase().includes(query.toLowerCase())
+//       // );
+
+//       // If sub search results are empty, search by sub2
+//       if (subSearchResults.length === 0) {
+//         // let sub2SearchResults = allProducts.filter((product) =>
+//         //   product.subs2.some((sub2) =>
+//         //     sub2.name.toLowerCase().includes(query.toLowerCase())
+//         //   )
+//         // );
+//         if (sub2SearchResults.length === 0) {
+//           let colorSearchResults = allProducts.filter((product) =>
+//             product.color.toLowerCase().includes(query.toLowerCase())
+//           );
+//           if (colorSearchResults.length === 0) {
+//             let brandSearchResults = allProducts.filter((product) =>
+//               product.brand.toLowerCase().includes(query.toLowerCase())
+//             );
+//             if (brandSearchResults.length === 0) {
+//               let artSearchResults = allProducts.filter(
+//                 (product) => product.art === parseInt(query)
+//               );
+
+//               res.json(artSearchResults);
+//             } else {
+//               res.json(brandSearchResults);
+//             }
+//           } else {
+//             res.json(colorSearchResults);
+//           }
+//         } else {
+//           res.json(sub2SearchResults);
+//         }
+//       } else {
+//         res.json(subSearchResults);
+//       }
+//     } else {
+//       res.json(categorySearchResults);
+//     }
+//   } catch (err) {
+//     console.error("Error handling query:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
 const handleQuery = async (req, res, query) => {
   try {
     // Perform text search on title and description
@@ -487,59 +557,80 @@ const handleQuery = async (req, res, query) => {
       .populate("attributes.subs2")
       .exec();
 
-    // Filter products by category name
-    let categorySearchResults = allProducts.filter((product) =>
-      product.category.name.toLowerCase().includes(query.toLowerCase())
+    const lowerCaseQuery = query.toLowerCase();
+
+    // Search by title (case-insensitive)
+    let titleSearchResults = allProducts.filter((product) =>
+      product.title.toLowerCase().includes(lowerCaseQuery)
     );
-
-    // If category search results are empty, search by sub
-    if (categorySearchResults.length === 0) {
-      let subSearchResults = allProducts.filter((product) =>
-        product.subs.name.toLowerCase().includes(query.toLowerCase())
-      );
-
-      // If sub search results are empty, search by sub2
-      if (subSearchResults.length === 0) {
-        let sub2SearchResults = allProducts.filter((product) =>
-          product.subs2.some((sub2) =>
-            sub2.name.toLowerCase().includes(query.toLowerCase())
-          )
-        );
-
-        // If sub2 search results are empty, search by color
-        if (sub2SearchResults.length === 0) {
-          let colorSearchResults = allProducts.filter((product) =>
-            product.color.toLowerCase().includes(query.toLowerCase())
-          );
-
-          // If color search results are empty, search by brand
-          if (colorSearchResults.length === 0) {
-            let brandSearchResults = allProducts.filter((product) =>
-              product.brand.toLowerCase().includes(query.toLowerCase())
-            );
-
-            // If brand search results are empty, search by art
-            if (brandSearchResults.length === 0) {
-              let artSearchResults = allProducts.filter(
-                (product) => product.art === parseInt(query)
-              );
-
-              res.json(artSearchResults);
-            } else {
-              res.json(brandSearchResults);
-            }
-          } else {
-            res.json(colorSearchResults);
-          }
-        } else {
-          res.json(sub2SearchResults);
-        }
-      } else {
-        res.json(subSearchResults);
-      }
-    } else {
-      res.json(categorySearchResults);
+    if (titleSearchResults.length !== 0) {
+      return res.json(titleSearchResults);
     }
+
+    // Search by description (case-insensitive)
+    let descriptionSearchResults = allProducts.filter((product) =>
+      product.description.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (descriptionSearchResults.length !== 0) {
+      return res.json(descriptionSearchResults);
+    }
+
+    // Search by category (case-insensitive)
+    let categorySearchResults = allProducts.filter((product) =>
+      product.category.name.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (categorySearchResults.length !== 0) {
+      return res.json(categorySearchResults);
+    }
+
+    // Search by subs (case-insensitive)
+    let subSearchResults = allProducts.filter((product) =>
+      product.attributes.some((attr) =>
+        attr.subs.name.toLowerCase().includes(lowerCaseQuery)
+      )
+    );
+    if (subSearchResults.length !== 0) {
+      return res.json(subSearchResults);
+    }
+
+    // Search by subs2 (case-insensitive)
+    let sub2SearchResults = allProducts.filter((product) =>
+      product.attributes.some((attr) =>
+        attr.subs2.some((sub2) =>
+          sub2.name.toLowerCase().includes(lowerCaseQuery)
+        )
+      )
+    );
+    if (sub2SearchResults.length !== 0) {
+      return res.json(sub2SearchResults);
+    }
+
+    // Search by color (case-insensitive)
+    let colorSearchResults = allProducts.filter((product) =>
+      product.color.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (colorSearchResults.length !== 0) {
+      return res.json(colorSearchResults);
+    }
+
+    // Search by brand (case-insensitive)
+    let brandSearchResults = allProducts.filter((product) =>
+      product.brand.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (brandSearchResults.length !== 0) {
+      return res.json(brandSearchResults);
+    }
+
+    // Search by art (exact match)
+    let artSearchResults = allProducts.filter(
+      (product) => product.art === parseInt(query)
+    );
+    if (artSearchResults.length !== 0) {
+      return res.json(artSearchResults);
+    }
+
+    // If no results found
+    res.status(404).json({ message: "No products found" });
   } catch (err) {
     console.error("Error handling query:", err);
     res.status(500).json({ error: "Internal server error" });
